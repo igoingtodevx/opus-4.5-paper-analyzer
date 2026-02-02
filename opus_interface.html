@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Opus 4.5 - Paper Analyse</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #e0e0e0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #fff;
+            font-size: 2rem;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #a0a0a0;
+        }
+        
+        input[type="password"], input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 14px;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 14px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        
+        #paperContent {
+            min-height: 200px;
+        }
+        
+        #promptInput {
+            min-height: 120px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e0e0e0;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        #responseContainer {
+            display: none;
+        }
+        
+        #responseContent {
+            min-height: 300px;
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #6366f1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #fca5a5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .model-info {
+            text-align: center;
+            color: #6366f1;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+        
+        .file-input-wrapper {
+            margin-top: 10px;
+        }
+        
+        input[type="file"] {
+            color: #a0a0a0;
+        }
+        
+        .token-info {
+            font-size: 0.85rem;
+            color: #6b7280;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 Claude Opus 4.5 - Paper Analyse</h1>
+        <p class="model-info">Modell: claude-sonnet-4-20250514 (oder claude-opus-4-20250514)</p>
+        
+        <!-- API Key -->
+        <div class="card">
+            <label for="apiKey">🔑 Anthropic API Key</label>
+            <input type="password" id="apiKey" placeholder="sk-ant-api03-...">
+            <p class="token-info">Dein API Key wird nur lokal verwendet und nicht gespeichert.</p>
+        </div>
+        
+        <!-- Paper Content -->
+        <div class="card">
+            <label for="paperContent">📄 Paper Inhalt</label>
+            <textarea id="paperContent" placeholder="Füge hier den Text deines Papers ein..."></textarea>
+            <div class="file-input-wrapper">
+                <label>Oder lade eine Textdatei hoch:</label>
+                <input type="file" id="fileInput" accept=".txt,.md">
+            </div>
+        </div>
+        
+        <!-- Prompt -->
+        <div class="card">
+            <label for="promptInput">💬 Dein Prompt</label>
+            <textarea id="promptInput" placeholder="z.B. Analysiere dieses Paper und fasse die Hauptargumente zusammen...">Analysiere das folgende wissenschaftliche Paper. Identifiziere:
+1. Die Hauptforschungsfrage
+2. Die verwendete Methodik
+3. Die wichtigsten Ergebnisse
+4. Stärken und Schwächen der Studie
+5. Relevanz für Business Analytics</textarea>
+            <div class="button-group">
+                <button class="btn-primary" id="analyzeBtn" onclick="analyzeWithClaude()">
+                    🚀 Mit Opus 4.5 analysieren
+                </button>
+                <button class="btn-secondary" onclick="clearAll()">
+                    🗑️ Alles löschen
+                </button>
+            </div>
+        </div>
+        
+        <!-- Loading -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Claude denkt nach...</p>
+        </div>
+        
+        <!-- Error -->
+        <div class="error" id="errorBox"></div>
+        
+        <!-- Response -->
+        <div class="card" id="responseContainer">
+            <label>📝 Antwort von Claude Opus 4.5</label>
+            <div id="responseContent"></div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="copyResponse()">
+                    📋 Kopieren
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // File upload handler
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('paperContent').value = e.target.result;
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        async function analyzeWithClaude() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const paperContent = document.getElementById('paperContent').value.trim();
+            const promptInput = document.getElementById('promptInput').value.trim();
+            
+            // Validation
+            if (!apiKey) {
+                showError('Bitte gib deinen Anthropic API Key ein.');
+                return;
+            }
+            
+            if (!paperContent) {
+                showError('Bitte füge den Paper-Inhalt ein.');
+                return;
+            }
+            
+            if (!promptInput) {
+                showError('Bitte gib einen Prompt ein.');
+                return;
+            }
+            
+            // Combine prompt with paper content
+            const fullPrompt = `${promptInput}\n\n--- PAPER INHALT ---\n\n${paperContent}`;
+            
+            // Show loading, hide error and response
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('errorBox').style.display = 'none';
+            document.getElementById('responseContainer').style.display = 'none';
+            document.getElementById('analyzeBtn').disabled = true;
+            
+            try {
+                const response = await fetch('https://api.anthropic.com/v1/messages', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': apiKey,
+                        'anthropic-version': '2023-06-01',
+                        'anthropic-dangerous-direct-browser-access': 'true'
+                    },
+                    body: JSON.stringify({
+                        model: 'claude-opus-4-20250514',
+                        max_tokens: 8192,
+                        messages: [
+                            {
+                                role: 'user',
+                                content: fullPrompt
+                            }
+                        ]
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error?.message || `API Fehler: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                const assistantMessage = data.content[0].text;
+                
+                // Show response
+                document.getElementById('responseContent').textContent = assistantMessage;
+                document.getElementById('responseContainer').style.display = 'block';
+                
+            } catch (error) {
+                showError(`Fehler: ${error.message}`);
+            } finally {
+                document.getElementById('loading').classList.remove('active');
+                document.getElementById('analyzeBtn').disabled = false;
+            }
+        }
+        
+        function showError(message) {
+            const errorBox = document.getElementById('errorBox');
+            errorBox.textContent = message;
+            errorBox.style.display = 'block';
+        }
+        
+        function clearAll() {
+            document.getElementById('paperContent').value = '';
+            document.getElementById('promptInput').value = '';
+            document.getElementById('responseContainer').style.display = 'none';
+            document.getElementById('errorBox').style.display = 'none';
+        }
+        
+        function copyResponse() {
+            const responseText = document.getElementById('responseContent').textContent;
+            navigator.clipboard.writeText(responseText).then(() => {
+                alert('Antwort in die Zwischenablage kopiert!');
+            });
+        }
+    </script>
+</body>
+</html>
